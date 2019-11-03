@@ -1,0 +1,9 @@
+cabal-version: 3.0
+version: 0.0
+name: rlist
+
+library
+  hs-source-dirs: .
+  build-depends: base
+  exposed-modules: Rlist
+  default-language: Haskell2010
