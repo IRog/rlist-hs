@@ -13,6 +13,12 @@ data Rlist a
   deriving (Show)
 
 mapTree :: (a -> b) -> Tree a -> Tree b
-mapTree f t = case t of
-  Leaf a -> Leaf (f a)
-  Parent a l r -> Parent (f a) (mapTree f l) (mapTree f r)
+mapTree f (Leaf a)       = Leaf (f a)
+mapTree f (Parent a l r) =
+  Parent (f a) (mapTree f l) (mapTree f r)
+
+mapNode :: (a -> b) -> Node a -> Node b
+mapNode f (MakeNode i t) = MakeNode i (mapTree f t)
+
+mapRlist :: (a -> b) -> Rlist a -> Rlist b
+mapRlist f (MakeRlist ns) = MakeRlist (map (mapNode f) ns)
