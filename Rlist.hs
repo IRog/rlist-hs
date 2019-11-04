@@ -41,3 +41,9 @@ indexTree index size (Parent item left right)
     in if index <= subtree_size
        then indexTree (index - 1) subtree_size left
        else indexTree (index - subtree_size - 1) subtree_size right
+
+index :: Int -> Rlist a -> Maybe a
+index idx (MakeRlist []) = Nothing
+index idx (MakeRlist ((MakeNode size tree) : rest))
+  | idx < size = Just $ indexTree idx size tree
+  | otherwise = index (idx - size) (MakeRlist rest)
