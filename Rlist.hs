@@ -1,4 +1,19 @@
-module Rlist where
+module Rlist
+  (
+    Rlist
+  , mapRlist
+  , cons
+  , uncons
+  , empty
+  , hd
+  , tl
+  , size
+  , index
+  , modify
+  , reduce
+  )
+where
+
 data Tree a
   = Leaf a
   | Parent a (Tree a) (Tree a)
