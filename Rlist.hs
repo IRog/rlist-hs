@@ -78,3 +78,23 @@ index _idx (MakeRlist []) = Nothing
 index idx (MakeRlist ((MakeNode sz tree) : rest))
   | idx < sz = Just $ indexTree idx sz tree
   | otherwise = index (idx - sz) (MakeRlist rest)
+
+modifyTree :: (a -> a) -> Int -> Int -> Tree a -> Tree a
+modifyTree fn 0 1 (Leaf item) = Leaf (fn item)
+modifyTree _fn _idx _sz (Leaf _item) =
+  error "modifyTree: leaf size invariant violated"
+modifyTree fn idx sz (Parent item l r)
+  | idx == 0 = Parent (fn item) l r
+  | otherwise =
+    let subtree_size = div (sz - 1) 2
+    in if idx <= subtree_size
+       then Parent item (modifyTree fn (idx - 1) subtree_size l) r
+       else Parent item l (modifyTree fn (idx - 1 - subtree_size) subtree_size r)
+
+modify :: (a -> a) -> Int -> Rlist a -> Maybe (Rlist a)
+modify _fn _idx (MakeRlist []) = Nothing
+modify fn idx (MakeRlist (node@(MakeNode sz tree) : rest))
+  | idx < sz = Just $ MakeRlist $ MakeNode sz (modifyTree fn idx sz tree) : rest
+  | otherwise = case modify fn (idx - sz) (MakeRlist rest) of
+    Nothing -> Nothing
+    Just (MakeRlist rlist) -> Just $ MakeRlist (node : rlist)
