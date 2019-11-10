@@ -20,7 +20,7 @@ data Tree a
   deriving (Show)
 
 data Node a
-  = MakeNode Int (Tree a)
+  = MakeNode {-# unpack #-} !Int (Tree a)
   deriving (Show)
 
 data Rlist a
@@ -51,7 +51,7 @@ uncons (MakeRlist (MakeNode sz (Leaf item) : rest))
 uncons (MakeRlist (MakeNode sz (Parent item l r) : rest)) =
   let new_size = div (sz - 1) 2
       new_list = MakeRlist $ MakeNode new_size l : MakeNode new_size r : rest
-  in Just (item, new_list)
+  in seq new_size $ Just (item, new_list)
 
 hd :: Rlist a -> Maybe a
 hd (MakeRlist []) = Nothing
@@ -74,16 +74,17 @@ size :: Rlist a -> Int
 size = go 0 where
   go acc (MakeRlist []) = acc
   go acc (MakeRlist ((MakeNode sz _tree) : rest)) =
-    go (acc + sz) (MakeRlist rest)
+    let new_acc = acc + sz
+    in seq new_acc $ go new_acc (MakeRlist rest)
 
 indexTree :: Int -> Int -> Tree a -> a
-indexTree indx _size (Leaf item)
+indexTree !indx _size (Leaf item)
   | indx == 0 = item
   | otherwise = error "indexTree: leaf size invariant violated"
-indexTree indx sz (Parent item left right)
+indexTree !indx !sz (Parent item left right)
   | indx == 0 = item
   | otherwise =
-    let subtree_size = div (sz - 1) 2
+    let !subtree_size = div (sz - 1) 2
     in if indx <= subtree_size
        then indexTree (indx - 1) subtree_size left
        else indexTree (indx - subtree_size - 1) subtree_size right
@@ -98,29 +99,29 @@ modifyTree :: (a -> a) -> Int -> Int -> Tree a -> Tree a
 modifyTree fn 0 1 (Leaf item) = Leaf (fn item)
 modifyTree _fn _idx _sz (Leaf _item) =
   error "modifyTree: leaf size invariant violated"
-modifyTree fn idx sz (Parent item l r)
+modifyTree fn !idx !sz (Parent item l r)
   | idx == 0 = Parent (fn item) l r
   | otherwise =
-    let subtree_size = div (sz - 1) 2
+    let !subtree_size = div (sz - 1) 2
     in if idx <= subtree_size
        then Parent item (modifyTree fn (idx - 1) subtree_size l) r
        else Parent item l (modifyTree fn (idx - 1 - subtree_size) subtree_size r)
 
 modify :: (a -> a) -> Int -> Rlist a -> Maybe (Rlist a)
 modify _fn _idx (MakeRlist []) = Nothing
-modify fn idx (MakeRlist (node@(MakeNode sz tree) : rest))
+modify fn !idx (MakeRlist (node@(MakeNode sz tree) : rest))
   | idx < sz = Just $ MakeRlist $ MakeNode sz (modifyTree fn idx sz tree) : rest
   | otherwise = case modify fn (idx - sz) (MakeRlist rest) of
     Nothing -> Nothing
     Just (MakeRlist rlist) -> Just $ MakeRlist (node : rlist)
 
 reduceTree :: (b -> a -> b) -> b -> Tree a -> b
-reduceTree fn acc (Leaf item) = fn acc item
-reduceTree fn acc (Parent item l r) =
-  let new_acc = fn acc item
-      newer_acc = reduceTree fn new_acc l
+reduceTree fn !acc (Leaf item) = fn acc item
+reduceTree fn !acc (Parent item l r) =
+  let !new_acc = fn acc item
+      !newer_acc = reduceTree fn new_acc l
   in reduceTree fn newer_acc r
 
 reduce :: (b -> a -> b) -> b -> Rlist a -> b
-reduce fn acc (MakeRlist nodes) =
-  foldl (\new_acc (MakeNode _sz tree) -> reduceTree fn new_acc tree) acc nodes
+reduce fn !acc (MakeRlist nodes) =
+  foldl (\ !new_acc (MakeNode _sz tree) -> reduceTree fn new_acc tree) acc nodes

@@ -8,3 +8,4 @@ library
   exposed-modules: Rlist
   default-language: Haskell2010
   ghc-options: -Wall
+  default-extensions: BangPatterns
