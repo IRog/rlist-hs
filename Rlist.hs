@@ -98,3 +98,14 @@ modify fn idx (MakeRlist (node@(MakeNode sz tree) : rest))
   | otherwise = case modify fn (idx - sz) (MakeRlist rest) of
     Nothing -> Nothing
     Just (MakeRlist rlist) -> Just $ MakeRlist (node : rlist)
+
+reduceTree :: (b -> a -> b) -> b -> Tree a -> b
+reduceTree fn acc (Leaf item) = fn acc item
+reduceTree fn acc (Parent item l r) =
+  let new_acc = fn acc item
+      newer_acc = reduceTree fn new_acc l
+  in reduceTree fn newer_acc r
+
+reduce :: (b -> a -> b) -> b -> Rlist a -> b
+reduce fn acc (MakeRlist nodes) =
+  foldl (\new_acc (MakeNode _sz tree) -> reduceTree fn new_acc tree) acc nodes
