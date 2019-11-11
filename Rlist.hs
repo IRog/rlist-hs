@@ -13,6 +13,7 @@ module Rlist
   , reduce
   )
 where
+import Data.Foldable (foldl')
 
 data Tree a
   = Leaf a
@@ -124,4 +125,4 @@ reduceTree fn !acc (Parent item l r) =
 
 reduce :: (b -> a -> b) -> b -> Rlist a -> b
 reduce fn !acc (MakeRlist nodes) =
-  foldl (\ !new_acc (MakeNode _sz tree) -> reduceTree fn new_acc tree) acc nodes
+  foldl' (\ !new_acc (MakeNode _sz tree) -> reduceTree fn new_acc tree) acc nodes
