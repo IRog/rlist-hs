@@ -11,6 +11,9 @@ module Rlist
   , index
   , modify
   , reduce
+  , lazyReduce
+  , rlistToList'
+  , rlistToList
   )
 where
 import Data.Foldable (foldl')
@@ -24,7 +27,7 @@ data Node a
   = MakeNode {-# unpack #-} !Int (Tree a)
   deriving (Show)
 
-data Rlist a
+newtype Rlist a
   = MakeRlist [Node a]
   deriving (Show)
 
@@ -126,3 +129,18 @@ reduceTree fn !acc (Parent item l r) =
 reduce :: (b -> a -> b) -> b -> Rlist a -> b
 reduce fn !acc (MakeRlist nodes) =
   foldl' (\ !new_acc (MakeNode _sz tree) -> reduceTree fn new_acc tree) acc nodes
+
+lazyReduceTree :: (a -> b -> b) -> b -> Tree a -> b
+lazyReduceTree fn acc (Leaf item) = fn item acc
+lazyReduceTree fn acc (Parent item l r) =
+  fn item $ lazyReduceTree fn (lazyReduceTree fn acc r) l
+
+lazyReduce :: (a -> b -> b) -> b -> Rlist a -> b
+lazyReduce fn acc (MakeRlist nodes) =
+  foldr (\ (MakeNode _sz tree) new_acc -> lazyReduceTree fn new_acc tree) acc nodes
+
+rlistToList' :: Rlist a -> [a]
+rlistToList' rlist = reverse $ reduce (\ xs x -> x : xs) [] rlist
+
+rlistToList :: Rlist a -> [a]
+rlistToList rlist = lazyReduce (:) [] rlist
