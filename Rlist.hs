@@ -14,6 +14,7 @@ module Rlist
   , lazyReduce
   , rlistToList'
   , rlistToList
+  , listToRlist
   )
 where
 import Data.Foldable (foldl')
@@ -30,6 +31,29 @@ data Node a
 newtype Rlist a
   = MakeRlist [Node a]
   deriving (Show)
+
+instance Semigroup (Rlist a) where
+  (<>) a b = listToRlist $ rlistToList a <> rlistToList b
+
+instance Monoid (Rlist a) where
+  mempty = empty
+
+instance Functor Tree where
+  fmap = mapTree
+
+instance Functor Node where
+  fmap = mapNode
+
+instance Functor Rlist where
+  fmap = mapRlist
+
+instance Foldable Tree where
+  foldr = lazyReduceTree
+  foldl' = reduceTree
+
+instance Foldable Rlist where
+  foldr = lazyReduce
+  foldl' = reduce
 
 mapTree :: (a -> b) -> Tree a -> Tree b
 mapTree f (Leaf a)       = Leaf (f a)
@@ -144,3 +168,6 @@ rlistToList' rlist = reverse $ reduce (\ xs x -> x : xs) [] rlist
 
 rlistToList :: Rlist a -> [a]
 rlistToList rlist = lazyReduce (:) [] rlist
+
+listToRlist :: [a] -> Rlist a
+listToRlist xs = foldr cons empty xs
