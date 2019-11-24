@@ -5,6 +5,7 @@ module Rlist
   , cons
   , uncons
   , empty
+  , isEmpty
   , hd
   , tl
   , size
@@ -22,15 +23,15 @@ import Data.Foldable (foldl')
 data Tree a
   = Leaf a
   | Parent a (Tree a) (Tree a)
-  deriving (Show)
+  deriving (Eq, Show)
 
 data Node a
   = MakeNode {-# unpack #-} !Int (Tree a)
-  deriving (Show)
+  deriving (Eq, Show)
 
 newtype Rlist a
   = MakeRlist [Node a]
-  deriving (Show)
+  deriving (Eq, Show)
 
 instance Semigroup (Rlist a) where
   (<>) a b = listToRlist $ rlistToList a <> rlistToList b
@@ -54,6 +55,8 @@ instance Foldable Tree where
 instance Foldable Rlist where
   foldr = lazyReduce
   foldl' = reduce
+  length = size
+  null = isEmpty
 
 mapTree :: (a -> b) -> Tree a -> Tree b
 mapTree f (Leaf a)       = Leaf (f a)
@@ -97,6 +100,10 @@ tl (MakeRlist (MakeNode _size (Parent _item _l _r) : rest)) = MakeRlist rest
 
 empty :: Rlist a
 empty = MakeRlist []
+
+isEmpty :: Rlist a -> Bool
+isEmpty (MakeRlist []) = True
+isEmpty _any = False
 
 size :: Rlist a -> Int
 size = go 0 where

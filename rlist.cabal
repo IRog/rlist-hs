@@ -2,10 +2,32 @@ cabal-version: 3.0
 version: 0.0
 name: rlist
 
+common extensions
+  default-extensions:
+    BangPatterns
+    ExplicitForAll
+    InstanceSigs
+    TypeApplications
+    ScopedTypeVariables
+
+common simple
+  import: extensions
+  default-language: Haskell2010
+  ghc-options: -Wall
+
 library
+  import: simple
   hs-source-dirs: .
   build-depends: base
   exposed-modules: Rlist
-  default-language: Haskell2010
-  ghc-options: -Wall
-  default-extensions: BangPatterns
+
+test-suite rlist-test
+  import: simple
+  type: exitcode-stdio-1.0
+  hs-source-dirs: test/
+  main-is: Spec.hs
+  ghc-options: -Wno-orphans
+  build-depends: base
+               , rlist
+               , random ^>= 1.1
+               , QuickCheck ^>= 2.13
