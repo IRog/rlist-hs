@@ -8,6 +8,7 @@ common extensions
     ExplicitForAll
     InstanceSigs
     TypeApplications
+    TypeFamilies
     ScopedTypeVariables
 
 common simple
@@ -19,7 +20,7 @@ library
   import: simple
   hs-source-dirs: .
   build-depends: base
-  exposed-modules: Rlist
+  exposed-modules: Rlist, Rlist.Internal
 
 test-suite rlist-test
   import: simple
