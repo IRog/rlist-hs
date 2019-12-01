@@ -14,6 +14,7 @@ main =
   *> quickCheck prop_size_list_oracle
   *> quickCheck prop_max_mesenne_naive
   *> quickCheck prop_list_to_rlistN
+  *> quickCheck prop_list_to_rlistN'
 
 prop_list_rlist_tripping :: [Int] -> Bool
 prop_list_rlist_tripping xs = rlistToList (listToRlist xs) == xs
@@ -37,6 +38,10 @@ prop_max_mesenne_naive x =
 prop_list_to_rlistN :: [Int] -> Bool
 prop_list_to_rlistN xs =
   listToRlistN (length xs) xs == listToRlist xs
+
+prop_list_to_rlistN' :: [Int] -> Bool
+prop_list_to_rlistN' xs =
+  listToRlistN' (length xs) xs == listToRlist xs
 
 isBalanced :: Tree a -> Bool
 isBalanced = snd . isBalancedWorker

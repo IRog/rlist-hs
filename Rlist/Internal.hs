@@ -4,6 +4,7 @@ import GHC.Exts(IsList(..))
 import Data.Foldable(foldl')
 import qualified Data.Bits as Bits
 import Control.Exception(assert)
+import Control.DeepSeq
 
 data Tree a
   = Leaf a
@@ -43,6 +44,20 @@ decompose = go [] where
     let !new_mersenne = maxMersenneUpTo n
         !new_n        = n - new_mersenne
     in go (new_mersenne : acc) new_n
+
+instance NFData1 Tree where
+  liftRnf f = go where
+    go !(Leaf a) = f a
+    go !(Parent x l r) = go l `seq` go r `seq` f x
+
+instance NFData1 Node where
+  liftRnf f (MakeNode _ t) = liftRnf @Tree f t
+
+instance NFData a => NFData (Rlist a) where
+  rnf = rnf1
+
+instance NFData1 Rlist where
+  liftRnf f (MakeRlist xs) = liftRnf @[] (liftRnf f) xs
 
 instance IsList (Rlist a) where
   type Item (Rlist a) = a
@@ -186,6 +201,15 @@ lazyReduceTree fn acc (Parent item l r) =
 lazyReduce :: (a -> b -> b) -> b -> Rlist a -> b
 lazyReduce fn acc (MakeRlist nodes) =
   foldr (\ (MakeNode _sz tree) new_acc -> lazyReduceTree fn new_acc tree) acc nodes
+
+listToRlistN' :: forall a. Int -> [a] -> Rlist a
+listToRlistN' n xs = MakeRlist (go [] (decompose n) xs) where
+  go :: [Node a] -> [Int] -> [a] -> [Node a]
+  go acc  [      ] [] = reverse acc
+  go _acc [      ] _  = error $ "listToRlistN': " <> show n
+  go acc (m : ms) ys =
+    let (node, rest) = mkNode m ys
+    in go (node : acc) ms rest
 
 listToRlistN :: forall a. Int -> [a] -> Rlist a
 listToRlistN n xs = MakeRlist (go (decompose n) xs) where
