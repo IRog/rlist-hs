@@ -62,7 +62,10 @@ instance NFData1 Rlist where
 instance IsList (Rlist a) where
   type Item (Rlist a) = a
   fromList xs = listToRlistN (length xs) xs
-  fromListN = listToRlistN
+  -- the 30000 is from benchmarks see bench/Bench.hs
+  fromListN n ns
+    | n > 30000 = listToRlistN n ns
+    | otherwise = listToRlist ns
   toList = rlistToList
 
 instance Semigroup (Rlist a) where

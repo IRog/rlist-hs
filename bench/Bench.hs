@@ -11,7 +11,7 @@ main :: IO ()
 main = do
   let lil = [1] :: [Int]
   let big = [1..1000] :: [Int]
-  let bigger = [1..10000] :: [Int]
+  let bigger = [1..30000] :: [Int]
   let biggest = [1..100000] :: [Int]
   evaluate (rnf lil)
   evaluate (rnf big)
@@ -36,9 +36,9 @@ main = do
       ]
     , bgroup "bigger"
       [ bench "listToRlistNBigger" $
-          nf (listToRlistN 10000) bigger
+          nf (listToRlistN 30000) bigger
       , bench "listToRlistN'Bigger" $
-          nf (listToRlistN' 10000) bigger
+          nf (listToRlistN' 30000) bigger
       , bench "listToRlistBigger" $ nf listToRlist bigger
       ]
     , bgroup "biggest"
